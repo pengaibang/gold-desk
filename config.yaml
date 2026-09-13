@@ -14,8 +14,13 @@ filters:
     EUR: [High]
     GBP: [High]          # BoE moves DXY via cable
     CHF: [High]          # gold's other safe-haven leg
-  # Always keep an event whose title matches any of these, whatever the
-  # currency or impact level above says.
+  # Keyword override: an event whose title matches any of these is shown even
+  # if its impact level is below the threshold above. It does NOT override the
+  # currency list — an unlisted currency never appears.
+  # always_keep_for limits which currencies the keywords apply to; without it
+  # they would apply to every listed currency (so Swiss PPI would ride in on
+  # the "PPI" keyword).
+  always_keep_for: [USD]
   always_keep:
     - FOMC
     - Federal Funds Rate

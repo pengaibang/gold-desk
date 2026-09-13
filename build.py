@@ -81,12 +81,16 @@ def keep_event(ev, filters):
     for bad in filters.get("never_show") or []:
         if bad.lower() in title.lower():
             return False
-    for good in filters.get("always_keep") or []:
-        if good.lower() in title.lower():
-            return True
     allowed = (filters.get("currencies") or {}).get(ev.get("country"))
     if not allowed:
+        # Currency is not on the list at all — nothing gets it on screen.
         return False
+    scope = filters.get("always_keep_for")
+    if scope is None or ev.get("country") in scope:
+        for good in filters.get("always_keep") or []:
+            if good.lower() in title.lower():
+                # The keyword overrides the impact filter, never the currency one.
+                return True
     return (ev.get("impact") or "") in allowed
 
 
