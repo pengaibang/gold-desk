@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1024, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Gold Desk">
+<meta http-equiv="refresh" content="300">
+<title>Gold Desk</title>
+<style>
+  /* iOS 12 Safari: flexbox + ES5 only. No grid, no gap, no custom-property
+     fallbacks needed (Safari 9.1+ supports variables). */
+  :root{
+    --ground:#EAEFE8; --panel:#F7F9F5; --panel-2:#E2EADF; --white:#FFFFFF;
+    --rule:#C9D6C6; --rule-soft:#DCE5D9;
+    --ink:#1E2A23; --ink-2:#55665C; --ink-3:#88998E;
+    --green:#2F7D5A; --green-soft:#DCEBE1; --green-line:#A9CDB8;
+    --brass:#957B2B; --hi:#B0544A; --hi-soft:#F6E6E3; --med:#BC8A34; --low:#5B87A6;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;}
+  body{
+    background:var(--ground); color:var(--ink);
+    font-family:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size:16px; -webkit-font-smoothing:antialiased;
+    -webkit-user-select:none; user-select:none;
+  }
+  .device{width:1024px;height:768px;display:flex;flex-direction:column;background:var(--ground);}
+
+  .top{display:flex;-webkit-align-items:stretch;align-items:stretch;border-bottom:1px solid var(--rule);background:var(--panel);}
+  .top .slot{padding:11px 16px;display:flex;flex-direction:column;-webkit-justify-content:center;justify-content:center;}
+  .top .slot + .slot{border-left:1px solid var(--rule-soft);}
+  .slot .lab{font-family:Menlo,Consolas,monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);}
+  .slot .val{font-family:Menlo,Consolas,monospace;font-size:23px;font-weight:600;color:var(--ink);line-height:1.15;margin-top:3px;}
+  .slot .sub{font-size:12px;color:var(--ink-2);margin-top:3px;}
+  .slot.wide{-webkit-flex:1;flex:1;}
+  .price .val{color:var(--brass);font-size:27px;}
+  .up{color:var(--green);font-weight:500;}
+  .dn{color:var(--hi);font-weight:500;}
+  .cd{background:var(--green-soft);}
+  .cd .val{font-size:28px;color:var(--green);}
+  .stale{font-size:10px;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle;}
+
+  .split{-webkit-flex:1;flex:1;display:flex;min-height:0;}
+  .col-l{-webkit-flex:1;flex:1;display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--rule);}
+  .col-r{-webkit-flex:0 0 356px;flex:0 0 356px;display:flex;flex-direction:column;min-width:0;background:var(--panel);}
+
+  .hd{display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;
+      padding:8px 16px;border-bottom:1px solid var(--rule);background:var(--panel-2);}
+  .hd h2{margin:0;font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);}
+  .hd .note{font-family:Menlo,Consolas,monospace;font-size:10px;color:var(--ink-3);letter-spacing:.06em;}
+
+  .rows{-webkit-flex:1;flex:1;background:var(--white);display:flex;flex-direction:column;}
+  .row{-webkit-flex:1;flex:1;min-height:0;display:flex;-webkit-align-items:center;align-items:center;
+       padding:6px 16px;border-bottom:1px solid var(--rule-soft);}
+  .row.past{background:var(--panel);}
+  .row.past .name,.row.past .time{color:var(--ink-3);}
+  .row.next{background:var(--hi-soft);border-left:3px solid var(--hi);padding-left:13px;}
+  .row .time{font-family:Menlo,Consolas,monospace;font-size:18px;font-weight:500;color:var(--ink);width:58px;-webkit-flex:none;flex:none;}
+  .imp{width:4px;height:30px;border-radius:2px;-webkit-flex:none;flex:none;margin-right:13px;}
+  .imp.h{background:var(--hi);} .imp.m{background:var(--med);} .imp.l{background:var(--low);}
+  .row .body{-webkit-flex:1;flex:1;min-width:0;margin-right:13px;}
+  .row .name{font-size:15px;color:var(--ink);line-height:1.3;}
+  .row .name .d{font-family:Menlo,Consolas,monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+                color:var(--ink-3);background:var(--panel-2);border-radius:2px;padding:2px 5px;margin-right:7px;}
+  .row .meta{font-family:Menlo,Consolas,monospace;font-size:11px;color:var(--ink-3);letter-spacing:.04em;margin-top:2px;}
+  .row.next .meta{color:var(--hi);}
+  .ccy{font-family:Menlo,Consolas,monospace;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--ink-2);
+       background:var(--panel-2);border-radius:2px;padding:3px 6px;-webkit-flex:none;flex:none;margin-right:13px;}
+  .ccy.usd{color:var(--brass);background:#F2EDDC;}
+  .fig{display:flex;-webkit-flex:none;flex:none;font-family:Menlo,Consolas,monospace;text-align:right;}
+  .fig div{min-width:48px;margin-left:16px;}
+  .fig .k{display:block;font-size:9px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;}
+  .fig .v{display:block;font-size:14px;color:var(--ink-2);margin-top:2px;}
+  .fig .v.act{color:var(--ink);font-weight:500;}
+
+  .tl{padding:10px 16px 12px;background:var(--panel);border-top:1px solid var(--rule);}
+  .track{position:relative;height:80px;}
+  .band{position:absolute;height:20px;border-radius:2px;overflow:hidden;display:flex;-webkit-align-items:center;align-items:center;}
+  .band span{padding-left:8px;color:var(--ink);white-space:nowrap;font-family:Menlo,Consolas,monospace;
+             font-size:10px;letter-spacing:.12em;text-transform:uppercase;}
+  .nowline{position:absolute;top:18px;bottom:18px;width:2px;background:var(--green);}
+  .nowline b{position:absolute;top:-17px;left:-21px;width:44px;text-align:center;font-family:Menlo,Consolas,monospace;
+             font-size:10px;color:#FFFFFF;background:var(--green);border-radius:2px;padding:1px 0;font-weight:600;}
+  .ticks{position:absolute;left:0;right:0;bottom:0;height:15px;border-top:1px solid var(--rule);}
+  .tick{position:absolute;top:2px;font-family:Menlo,Consolas,monospace;font-size:10px;color:var(--ink-3);margin-left:-10px;}
+
+  .plan{display:flex;flex-direction:column;}
+  .task{-webkit-flex:1;flex:1;min-height:0;display:flex;-webkit-align-items:center;align-items:center;
+        padding:5px 16px;border-bottom:1px solid var(--rule-soft);}
+  .task .t{font-family:Menlo,Consolas,monospace;font-size:14px;color:var(--ink-2);width:48px;-webkit-flex:none;flex:none;}
+  .task .txt{font-size:14px;color:var(--ink);line-height:1.35;-webkit-flex:1;flex:1;}
+  .pip{width:8px;height:8px;border-radius:50%;-webkit-flex:none;flex:none;background:var(--rule);margin-right:11px;}
+  .task.done .pip{background:var(--green-line);}
+  .task.done .txt,.task.done .t{color:var(--ink-3);}
+  .task.active{background:var(--green-soft);}
+  .task.active .pip{background:var(--green);}
+  .task.active .txt{color:var(--green);font-weight:500;}
+  .task.block{background:var(--hi-soft);}
+  .task.block .pip{background:var(--hi);}
+  .task.block .txt{color:var(--hi);font-weight:500;}
+
+  .wk{-webkit-flex:1;flex:1;background:var(--white);display:flex;flex-direction:column;}
+  .wrow{-webkit-flex:1;flex:1;min-height:0;display:flex;-webkit-align-items:center;align-items:center;
+        padding:5px 16px;border-bottom:1px solid var(--rule-soft);}
+  .wrow .t{font-family:Menlo,Consolas,monospace;font-size:14px;color:var(--ink-2);width:48px;-webkit-flex:none;flex:none;}
+  .wrow .n{font-size:14px;color:var(--ink);-webkit-flex:1;flex:1;min-width:0;line-height:1.35;}
+  .wrow .d{font-family:Menlo,Consolas,monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-right:6px;}
+  .wrow.key{background:var(--green-soft);}
+  .wrow.key .n{color:var(--green);font-weight:500;}
+  .wrow.key .d{color:var(--green);}
+
+  .foot{display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:center;align-items:center;
+        padding:7px 16px;border-top:1px solid var(--rule);background:var(--panel-2);
+        font-family:Menlo,Consolas,monospace;font-size:10px;color:var(--ink-3);letter-spacing:.06em;}
+</style>
+</head>
+<body>
+<div class="device">
+
+  <div class="top">
+    <div class="slot">
+      <div class="lab">Bangkok</div>
+      <div class="val" id="clock">21:32:48</div>
+      <div class="sub" id="datestr">Sun 13 Sep 2026</div>
+    </div>
+    <div class="slot price">
+      <div class="lab">XAU/USD <span class="stale">no feed</span></div>
+      <div class="val">—</div>
+      <div class="sub"><span class=""></span></div>
+    </div>
+    <div class="slot">
+      <div class="lab">DXY</div>
+      <div class="val">—</div>
+      <div class="sub"><span class=""></span></div>
+    </div>
+    <div class="slot cd">
+      <div class="lab">Next high impact</div>
+      <div class="val" id="countdown">--:--:--</div>
+      <div class="sub">Claimant Count Change · 13:00</div>
+    </div>
+    <div class="slot wide">
+      <div class="lab">Session</div>
+      <div class="val"><span class="dot"></span>London + New York</div>
+      <div class="sub"></div>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="col-l">
+      <div class="hd">
+        <h2>Next up</h2>
+        <span class="note">USD high+med · EUR high · GBP high · CHF high</span>
+      </div>
+      <div class="rows" id="rows">
+<div class="row" data-epoch="1789336800" data-impact="Medium"><div class="time">05:00</div><div class="imp m"></div><span class="ccy usd">USD</span><div class="body"><div class="name"><span class="d">Mon</span>FOMC Member Speaks</div></div><div class="fig"><div><span class="k">Act</span><span class="v act">—</span></div><div><span class="k">Fcst</span><span class="v">—</span></div><div><span class="k">Prev</span><span class="v">—</span></div></div></div>
+<div class="row" data-epoch="1789389000" data-impact="Medium"><div class="time">19:30</div><div class="imp m"></div><span class="ccy usd">USD</span><div class="body"><div class="name"><span class="d">Mon</span>Empire State Manufacturing Index</div></div><div class="fig"><div><span class="k">Act</span><span class="v act">—</span></div><div><span class="k">Fcst</span><span class="v">-4.2</span></div><div><span class="k">Prev</span><span class="v">11.9</span></div></div></div>
+<div class="row" data-epoch="1789405200" data-impact="Medium"><div class="time">00:00</div><div class="imp m"></div><span class="ccy usd">USD</span><div class="body"><div class="name"><span class="d">Tue</span>10-y Bond Auction</div></div><div class="fig"><div><span class="k">Act</span><span class="v act">—</span></div><div><span class="k">Fcst</span><span class="v">—</span></div><div><span class="k">Prev</span><span class="v">4.11|2.4</span></div></div></div>
+<div class="row next" data-epoch="1789452000" data-impact="High"><div class="time">13:00</div><div class="imp h"></div><span class="ccy ">GBP</span><div class="body"><div class="name"><span class="d">Tue</span>Claimant Count Change</div><div class="meta">stand-aside 12:45&ndash;13:15</div></div><div class="fig"><div><span class="k">Act</span><span class="v act">—</span></div><div><span class="k">Fcst</span><span class="v">12.3K</span></div><div><span class="k">Prev</span><span class="v">17.1K</span></div></div></div>
+<div class="row" data-epoch="1789475400" data-impact="High"><div class="time">19:30</div><div class="imp h"></div><span class="ccy usd">USD</span><div class="body"><div class="name"><span class="d">Tue</span>Core Retail Sales m/m</div></div><div class="fig"><div><span class="k">Act</span><span class="v act">—</span></div><div><span class="k">Fcst</span><span class="v">0.3%</span></div><div><span class="k">Prev</span><span class="v">0.2%</span></div></div></div>
+<div class="row" data-epoch="1789475400" data-impact="High"><div class="time">19:30</div><div class="imp h"></div><span class="ccy usd">USD</span><div class="body"><div class="name"><span class="d">Tue</span>Retail Sales m/m</div></div><div class="fig"><div><span class="k">Act</span><span class="v act">—</span></div><div><span class="k">Fcst</span><span class="v">0.2%</span></div><div><span class="k">Prev</span><span class="v">0.5%</span></div></div></div>
+<div class="row" data-epoch="1789478100" data-impact="Medium"><div class="time">20:15</div><div class="imp m"></div><span class="ccy usd">USD</span><div class="body"><div class="name"><span class="d">Tue</span>Industrial Production m/m</div></div><div class="fig"><div><span class="k">Act</span><span class="v act">—</span></div><div><span class="k">Fcst</span><span class="v">0.1%</span></div><div><span class="k">Prev</span><span class="v">-0.1%</span></div></div></div>
+      </div>
+      <div class="tl">
+        <div class="track">
+<div class="band" style="left:16.67%;width:37.50%;top:18px;background:#8FB3A3;"><span>Sydney</span></div>
+<div class="band" style="left:29.17%;width:37.50%;top:42px;background:#8AA6C0;"><span>Tokyo</span></div>
+<div class="band" style="left:58.33%;width:37.50%;top:18px;background:#A79BC2;"><span>London</span></div>
+<div class="band" style="left:0.00%;width:16.67%;top:42px;background:#C0A288;"><span>New York</span></div>
+<div class="band" style="left:79.17%;width:20.83%;top:42px;background:#C0A288;"><span>New York</span></div>
+          <div class="nowline" id="nowline" style="left:89.722%;"><b id="nowlabel">21:32</b></div>
+          <div class="ticks">
+            <span class="tick" style="left:0%;">00</span>
+            <span class="tick" style="left:25%;">06</span>
+            <span class="tick" style="left:50%;">12</span>
+            <span class="tick" style="left:75%;">18</span>
+            <span class="tick" style="left:98.5%;">24</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-r">
+      <div class="hd"><h2>Routine</h2><span class="note">display only</span></div>
+      <div class="plan" id="plan">
+<div class="task done" data-minute="420"><div class="t">07:00</div><div class="pip"></div><div class="txt">Mark overnight Asia range, note the sweep</div></div>
+<div class="task done" data-minute="810"><div class="t">13:30</div><div class="pip"></div><div class="txt">Pre-London: HTF bias, H4 levels, invalidation</div></div>
+<div class="task done" data-minute="840"><div class="t">14:00</div><div class="pip"></div><div class="txt">London session</div></div>
+<div class="task block" data-minute="1155"><div class="t">19:15</div><div class="pip"></div><div class="txt">High-impact stand-aside — flat into the print</div></div>
+<div class="task active" data-minute="1230"><div class="t">20:30</div><div class="pip"></div><div class="txt">NY window — trade the reaction, not the number</div></div>
+      </div>
+      <div class="hd"><h2>Week ahead</h2><span class="note">high + med</span></div>
+      <div class="wk">
+<div class="wrow"><div class="t">10:00</div><div class="pip" style="background:var(--hi);"></div><div class="n"><span class="d">Wed</span>Final CPI y/y</div></div>
+<div class="wrow"><div class="t">19:30</div><div class="pip" style="background:var(--hi);"></div><div class="n"><span class="d">Wed</span>Core CPI m/m</div></div>
+<div class="wrow"><div class="t">19:30</div><div class="pip" style="background:var(--hi);"></div><div class="n"><span class="d">Wed</span>CPI y/y</div></div>
+<div class="wrow"><div class="t">21:30</div><div class="pip" style="background:var(--med);"></div><div class="n"><span class="d">Wed</span>Crude Oil Inventories</div></div>
+<div class="wrow key"><div class="t">01:00</div><div class="pip" style="background:var(--green);"></div><div class="n"><span class="d">Thu</span>Federal Funds Rate</div></div>
+<div class="wrow key"><div class="t">01:30</div><div class="pip" style="background:var(--green);"></div><div class="n"><span class="d">Thu</span>FOMC Press Conference</div></div>
+      </div>
+      <div class="foot">
+        <span>Built 21:32</span>
+        <span>ForexFactory wk37</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ES5 only — iOS 12 Safari. Everything here runs off the device clock in UTC
+   and the fixed Bangkok offset baked in at build time, so it stays correct
+   whatever timezone the iPad itself is set to. */
+(function () {
+  var OFFSET_MIN = parseInt('420', 10);
+  var NEXT_EPOCH = parseInt('1789452000', 10);
+
+  function local() {
+    return new Date(new Date().getTime() + OFFSET_MIN * 60000);
+  }
+  function two(n) { return (n < 10 ? '0' : '') + n; }
+
+  var clockEl = document.getElementById('clock');
+  var cdEl = document.getElementById('countdown');
+  var lineEl = document.getElementById('nowline');
+  var labelEl = document.getElementById('nowlabel');
+  var rowEls = document.getElementById('rows').getElementsByTagName('div');
+  var taskEls = document.getElementById('plan').getElementsByTagName('div');
+
+  var rows = [];
+  var i;
+  for (i = 0; i < rowEls.length; i++) {
+    if (rowEls[i].getAttribute('data-epoch')) {
+      rows.push({
+        el: rowEls[i],
+        epoch: parseInt(rowEls[i].getAttribute('data-epoch'), 10),
+        high: rowEls[i].getAttribute('data-impact') === 'High'
+      });
+    }
+  }
+  var tasks = [];
+  for (i = 0; i < taskEls.length; i++) {
+    if (taskEls[i].getAttribute('data-minute')) {
+      tasks.push({
+        el: taskEls[i],
+        minute: parseInt(taskEls[i].getAttribute('data-minute'), 10),
+        block: taskEls[i].className.indexOf('block') !== -1
+      });
+    }
+  }
+
+  function setClass(el, name, on) {
+    var c = ' ' + el.className + ' ';
+    var has = c.indexOf(' ' + name + ' ') !== -1;
+    if (on && !has) { el.className = el.className + ' ' + name; }
+    if (!on && has) {
+      el.className = c.split(' ' + name + ' ').join(' ')
+        .replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
+    }
+  }
+
+  function tick() {
+    var d = local();
+    var hh = d.getUTCHours(), mm = d.getUTCMinutes(), ss = d.getUTCSeconds();
+    clockEl.innerHTML = two(hh) + ':' + two(mm) + ':' + two(ss);
+
+    /* now marker */
+    var mins = hh * 60 + mm + ss / 60;
+    lineEl.style.left = (mins / 1440 * 100) + '%';
+    labelEl.innerHTML = two(hh) + ':' + two(mm);
+
+    /* countdown */
+    var nowEpoch = Math.floor(new Date().getTime() / 1000);
+    var target = NEXT_EPOCH;
+    var j;
+    for (j = 0; j < rows.length; j++) {
+      if (rows[j].high && rows[j].epoch > nowEpoch) { target = rows[j].epoch; break; }
+    }
+    if (target > nowEpoch) {
+      var s = target - nowEpoch;
+      cdEl.innerHTML = two(Math.floor(s / 3600)) + ':' + two(Math.floor(s / 60) % 60) + ':' + two(s % 60);
+    } else {
+      cdEl.innerHTML = '--:--:--';
+    }
+
+    /* rows age out; the next high-impact row keeps the highlight */
+    for (j = 0; j < rows.length; j++) {
+      setClass(rows[j].el, 'past', rows[j].epoch < nowEpoch);
+      setClass(rows[j].el, 'next', rows[j].epoch === target && target > nowEpoch);
+    }
+
+    /* routine: latest started row is the live one */
+    var activeIdx = -1;
+    for (j = 0; j < tasks.length; j++) {
+      if (tasks[j].minute <= hh * 60 + mm) { activeIdx = j; }
+    }
+    for (j = 0; j < tasks.length; j++) {
+      if (tasks[j].block) { continue; }
+      setClass(tasks[j].el, 'active', j === activeIdx);
+      setClass(tasks[j].el, 'done', j < activeIdx);
+    }
+  }
+
+  tick();
+  setInterval(tick, 1000);
+
+  /* If the page has been up a long time and the meta refresh was swallowed
+     (Safari does this when the app is backgrounded), force a reload. */
+  setInterval(function () { window.location.reload(true); }, 330000);
+})();
+</script>
+</body>
+</html>

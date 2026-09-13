@@ -1,0 +1,192 @@
+[
+ {
+  "title": "FOMC Member Speaks",
+  "country": "USD",
+  "date": "2026-09-13T18:00:00-04:00",
+  "impact": "Medium",
+  "forecast": "",
+  "previous": "",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Industrial Production m/m",
+  "country": "EUR",
+  "date": "2026-09-14T11:00:00+02:00",
+  "impact": "Low",
+  "forecast": "0.2%",
+  "previous": "-0.1%",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Empire State Manufacturing Index",
+  "country": "USD",
+  "date": "2026-09-14T08:30:00-04:00",
+  "impact": "Medium",
+  "forecast": "-4.2",
+  "previous": "11.9",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "10-y Bond Auction",
+  "country": "USD",
+  "date": "2026-09-14T13:00:00-04:00",
+  "impact": "Medium",
+  "forecast": "",
+  "previous": "4.11|2.4",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Claimant Count Change",
+  "country": "GBP",
+  "date": "2026-09-15T07:00:00+01:00",
+  "impact": "High",
+  "forecast": "12.3K",
+  "previous": "17.1K",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Core Retail Sales m/m",
+  "country": "USD",
+  "date": "2026-09-15T08:30:00-04:00",
+  "impact": "High",
+  "forecast": "0.3%",
+  "previous": "0.2%",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Retail Sales m/m",
+  "country": "USD",
+  "date": "2026-09-15T08:30:00-04:00",
+  "impact": "High",
+  "forecast": "0.2%",
+  "previous": "0.5%",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Industrial Production m/m",
+  "country": "USD",
+  "date": "2026-09-15T09:15:00-04:00",
+  "impact": "Medium",
+  "forecast": "0.1%",
+  "previous": "-0.1%",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Final CPI y/y",
+  "country": "EUR",
+  "date": "2026-09-16T05:00:00+02:00",
+  "impact": "High",
+  "forecast": "2.1%",
+  "previous": "2.1%",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Core CPI m/m",
+  "country": "USD",
+  "date": "2026-09-16T08:30:00-04:00",
+  "impact": "High",
+  "forecast": "0.3%",
+  "previous": "0.2%",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "CPI y/y",
+  "country": "USD",
+  "date": "2026-09-16T08:30:00-04:00",
+  "impact": "High",
+  "forecast": "2.7%",
+  "previous": "2.9%",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Crude Oil Inventories",
+  "country": "USD",
+  "date": "2026-09-16T10:30:00-04:00",
+  "impact": "Medium",
+  "forecast": "-1.4M",
+  "previous": "2.2M",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Federal Funds Rate",
+  "country": "USD",
+  "date": "2026-09-16T14:00:00-04:00",
+  "impact": "High",
+  "forecast": "3.75%",
+  "previous": "4.00%",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "FOMC Press Conference",
+  "country": "USD",
+  "date": "2026-09-16T14:30:00-04:00",
+  "impact": "High",
+  "forecast": "",
+  "previous": "",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Official Bank Rate",
+  "country": "GBP",
+  "date": "2026-09-17T12:00:00+01:00",
+  "impact": "High",
+  "forecast": "4.00%",
+  "previous": "4.00%",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Unemployment Claims",
+  "country": "USD",
+  "date": "2026-09-17T08:30:00-04:00",
+  "impact": "Medium",
+  "forecast": "228K",
+  "previous": "231K",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Philly Fed Manufacturing Index",
+  "country": "USD",
+  "date": "2026-09-17T08:30:00-04:00",
+  "impact": "Medium",
+  "forecast": "3.1",
+  "previous": "-0.3",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Prelim UoM Consumer Sentiment",
+  "country": "USD",
+  "date": "2026-09-18T10:00:00-04:00",
+  "impact": "Medium",
+  "forecast": "58.2",
+  "previous": "58.6",
+  "actual": "",
+  "url": "x"
+ },
+ {
+  "title": "Bank Holiday",
+  "country": "USD",
+  "date": "2026-09-18T00:00:00-04:00",
+  "impact": "Holiday",
+  "forecast": "",
+  "previous": "",
+  "actual": "",
+  "url": "x"
+ }
+]
