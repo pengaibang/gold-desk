@@ -50,13 +50,16 @@ layout:
 prices:
   enabled: true
   gold:
-    symbol: "XAUUSD=X"        # spot; falls back to GC=F (COMEX front month)
-    fallback: "GC=F"
+    symbol: "XAUUSD=X"        # spot gold
+    fallback: "GC=F"          # COMEX front-month future, if spot returns nothing
     label: "XAU/USD"
-    # Previous-day high/low. The FX day rolls at the New York close, so the
-    # default boundary is 04:00 Bangkok (= 17:00 New York) — that makes the
-    # range match the daily candle on your broker's chart, not a calendar day.
-    day_boundary: "04:00"
+    # Previous-day high/low. The day is defined by the market's own settlement
+    # time, not a Bangkok clock time — so it follows US daylight saving by
+    # itself (17:00 New York is 04:00 Bangkok in summer, 05:00 in winter).
+    # A session is labelled by the date it settles on, matching your platform's
+    # daily candle. If your broker settles elsewhere, change these two lines.
+    day_boundary_tz: "America/New_York"
+    day_boundary: "17:00"
     # The quote is delayed, so a break by less than this reads as sitting ON
     # the edge rather than through it. In dollars.
     edge_tolerance: 2.0
