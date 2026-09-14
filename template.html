@@ -56,6 +56,8 @@
   .cd{background:var(--green-soft);}
   .cd .val{font-size:28px;color:var(--green);}
   .stale{font-size:10px;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;}
+  .warn{font-size:10px;color:#FFFFFF;background:var(--hi);letter-spacing:.08em;
+        text-transform:uppercase;padding:2px 5px;border-radius:2px;}
   .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle;}
 
   .split{-webkit-flex:1;flex:1;display:flex;min-height:0;}
@@ -142,7 +144,7 @@
       <div class="sub" id="datestr">{{DATE_LONG}}</div>
     </div>
     <div class="slot price">
-      <div class="lab">{{GOLD_LABEL}} <span class="stale">{{PRICE_NOTE}}</span></div>
+      <div class="lab">{{GOLD_LABEL}} <span class="stale">{{PRICE_NOTE}}</span>{{SYMBOL_WARN}}</div>
       <div class="valrow">
         <div class="val">{{GOLD_VALUE}}</div>
         <span class="chip {{RANGE_STATE}}">{{RANGE_LABEL}}</span>
@@ -202,7 +204,7 @@
 {{WEEK_ROWS}}
       </div>
       <div class="foot">
-        <span>Built {{BUILT_AT}}</span>
+        <span>Built {{BUILT_AT}} &middot; {{GOLD_SYMBOL}}</span>
         <span>ForexFactory {{WEEK_TAG}}</span>
       </div>
     </div>

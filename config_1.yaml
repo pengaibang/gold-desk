@@ -51,7 +51,11 @@ prices:
   enabled: true
   gold:
     symbol: "XAUUSD=X"        # spot gold
-    fallback: "GC=F"          # COMEX front-month future, if spot returns nothing
+    fallback: "GC=F"          # COMEX front-month future
+    # false = never substitute the fallback. If spot is unavailable the tile
+    # shows no data rather than quietly serving futures under a spot label.
+    # true = allow it, but the tile is stamped with the symbol actually used.
+    allow_fallback: false
     label: "XAU/USD"
     # Previous-day high/low. The day is defined by the market's own settlement
     # time, not a Bangkok clock time — so it follows US daylight saving by

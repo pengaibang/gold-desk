@@ -91,21 +91,28 @@ def fetch_intraday(symbol):
         return []
 
 
-def session_key(moment_local, boundary_min):
-    """Which trading day a moment belongs to, given a day that rolls at
-    boundary_min minutes past local midnight (04:00 Bangkok = the NY close)."""
-    return (moment_local - timedelta(minutes=boundary_min)).date()
+def session_key(moment, boundary_tz, boundary_min):
+    """Which trading day a moment belongs to.
+
+    The day is defined by a settlement time in the MARKET's own zone — for
+    COMEX gold that is 17:00 New York — so the boundary follows US daylight
+    saving on its own instead of drifting an hour twice a year. A session is
+    labelled by the date it SETTLES on, which is what your platform's daily
+    candle is labelled by: the bars from 18:00 Mon through 17:00 Tue are
+    Tuesday's candle."""
+    m = moment.astimezone(boundary_tz)
+    return (m + timedelta(minutes=1440 - boundary_min)).date()
 
 
-def previous_day_range(bars, tz, boundary_min, now_local):
+def previous_day_range(bars, boundary_tz, boundary_min, now):
     """High and low of the last COMPLETED trading session before the current
-    one. Skips weekends and holidays for free — a day with no bars is simply
-    not in the bucket list."""
+    one. Skips weekends, holidays and the daily settlement break for free — a
+    day with no bars is simply not in the bucket list."""
     if not bars:
         return None
     buckets = {}
     for t_utc, h, lo, _c in bars:
-        k = session_key(t_utc.astimezone(tz), boundary_min)
+        k = session_key(t_utc, boundary_tz, boundary_min)
         b = buckets.get(k)
         if b is None:
             buckets[k] = [h, lo]
@@ -114,7 +121,7 @@ def previous_day_range(bars, tz, boundary_min, now_local):
                 b[0] = h
             if lo < b[1]:
                 b[1] = lo
-    current = session_key(now_local, boundary_min)
+    current = session_key(now, boundary_tz, boundary_min)
     earlier = sorted(k for k in buckets if k < current)
     if not earlier:
         return None
@@ -488,17 +495,28 @@ def build(offline=None, out_path=None):
     prev_range = None
     used_symbol = None
     if pcfg.get("enabled", True):
-        for sym in [g.get("symbol", "XAUUSD=X"), g.get("fallback")]:
+        wanted = g.get("symbol", "XAUUSD=X")
+        candidates = [wanted]
+        if g.get("allow_fallback", True) and g.get("fallback"):
+            candidates.append(g["fallback"])
+        for sym in candidates:
             if not sym:
                 continue
             gold = fetch_quote(sym)
             if gold is not None:
                 used_symbol = sym
                 break
+        if used_symbol and used_symbol != wanted:
+            # A fallback must never masquerade as the symbol you asked for.
+            print("  NOTE: %s returned nothing, using %s instead" % (wanted, used_symbol),
+                  file=sys.stderr)
+        if used_symbol is None:
+            print("  NOTE: no price source returned data (wanted %s)" % wanted, file=sys.stderr)
         if used_symbol:
-            bh, bm = [int(x) for x in str(g.get("day_boundary", "04:00")).split(":")]
+            btz = ZoneInfo(g.get("day_boundary_tz", "America/New_York"))
+            bh, bm = [int(x) for x in str(g.get("day_boundary", "17:00")).split(":")]
             prev_range = previous_day_range(
-                fetch_intraday(used_symbol), tz, bh * 60 + bm, now_local
+                fetch_intraday(used_symbol), btz, bh * 60 + bm, now_local
             )
         d = pcfg.get("dollar") or {}
         dollar = fetch_quote(d.get("symbol", "DX-Y.NYB"))
@@ -515,6 +533,7 @@ def build(offline=None, out_path=None):
     else:
         range_line = "previous range unavailable"
         range_day = ""
+    print("  gold source %s" % (used_symbol or "none"))
     print("  prev session %s  H %s  L %s  -> %s" % (range_day or "?",
           fmt_num(prev_range["high"]) if prev_range else "-",
           fmt_num(prev_range["low"]) if prev_range else "-", state))
@@ -550,6 +569,10 @@ def build(offline=None, out_path=None):
         "DXY_SUB": ds,
         "DXY_CLASS": dc,
         "PRICE_NOTE": "delayed" if (gold or dollar) else "no feed",
+        "GOLD_SYMBOL": esc(used_symbol or "none"),
+        "SYMBOL_WARN": ""
+        if (used_symbol == g.get("symbol", "XAUUSD=X"))
+        else ' <span class="warn">%s</span>' % esc(used_symbol or "no data"),
         "NEXT_EPOCH": str(next_high["epoch"]) if next_high else "0",
         "NEXT_LABEL": esc(next_high["title"]) + " · " + next_high["dt"].strftime("%H:%M")
         if next_high
