@@ -1,0 +1,119 @@
+# Gold Desk — everything you tune lives here.
+# Edit, commit, and the display picks it up on the next build.
+
+timezone: Asia/Bangkok
+
+# ---------------------------------------------------------------
+# Which events reach the screen.
+# Impact levels from the feed: High, Medium, Low, Holiday
+# ---------------------------------------------------------------
+filters:
+  # Per-currency allowed impact levels. Anything not listed is dropped.
+  currencies:
+    USD: [High, Medium]
+    EUR: [High]
+    GBP: [High]          # BoE moves DXY via cable
+    CHF: [High]          # gold's other safe-haven leg
+  # Keyword override: an event whose title matches any of these is shown even
+  # if its impact level is below the threshold above. It does NOT override the
+  # currency list — an unlisted currency never appears.
+  # always_keep_for limits which currencies the keywords apply to; without it
+  # they would apply to every listed currency (so Swiss PPI would ride in on
+  # the "PPI" keyword).
+  always_keep_for: [USD]
+  always_keep:
+    - FOMC
+    - Federal Funds Rate
+    - Fed Chair
+    - CPI
+    - Non-Farm
+    - Nonfarm
+    - PPI
+    - Treasury
+    - Bond Auction
+  # Never show these even if the filters above would allow them.
+  never_show:
+    - Bank Holiday
+
+# How many rows each panel holds. Rows stretch to fill the height,
+# so keep these near what actually fits on the mini's screen.
+layout:
+  today_rows: 7
+  week_rows: 6
+  routine_rows: 6
+
+# ---------------------------------------------------------------
+# Prices. Baked in at build time, so they are DELAYED by up to one
+# build interval — the page labels them as such. Set enabled: false
+# to drop the tiles entirely rather than show a stale number.
+# ---------------------------------------------------------------
+prices:
+  enabled: true
+  gold:
+    symbol: "XAUUSD=X"        # spot; falls back to GC=F (COMEX front month)
+    fallback: "GC=F"
+    label: "XAU/USD"
+    # Previous-day high/low. The FX day rolls at the New York close, so the
+    # default boundary is 04:00 Bangkok (= 17:00 New York) — that makes the
+    # range match the daily candle on your broker's chart, not a calendar day.
+    day_boundary: "04:00"
+    # The quote is delayed, so a break by less than this reads as sitting ON
+    # the edge rather than through it. In dollars.
+    edge_tolerance: 2.0
+  dollar:
+    symbol: "DX-Y.NYB"
+    label: "DXY"
+
+# ---------------------------------------------------------------
+# Trading sessions. Local open/close in each exchange's own zone —
+# the build converts to Bangkok time and handles DST for you.
+# ---------------------------------------------------------------
+sessions:
+  - name: Sydney
+    tz: Australia/Sydney
+    open: "07:00"
+    close: "16:00"
+    color: "#8FB3A3"
+    row: 1
+  - name: Tokyo
+    tz: Asia/Tokyo
+    open: "09:00"
+    close: "18:00"
+    color: "#8AA6C0"
+    row: 2
+  - name: London
+    tz: Europe/London
+    open: "08:00"
+    close: "17:00"
+    color: "#A79BC2"
+    row: 1
+  - name: New York
+    tz: America/New_York
+    open: "08:00"
+    close: "17:00"
+    color: "#C0A288"
+    row: 2
+
+# ---------------------------------------------------------------
+# Your routine. Times are Bangkok time, 24h.
+# kind: normal | block   ("block" renders red — a stand-aside window)
+# days: optional list of weekday abbreviations; omit for every weekday.
+# ---------------------------------------------------------------
+routine:
+  - time: "07:00"
+    text: "Mark overnight Asia range, note the sweep"
+  - time: "13:30"
+    text: "Pre-London: HTF bias, H4 levels, invalidation"
+  - time: "14:00"
+    text: "London session"
+  - time: "19:15"
+    text: "High-impact stand-aside — flat into the print"
+    kind: block
+  - time: "20:30"
+    text: "NY window — trade the reaction, not the number"
+  - time: "05:30"
+    text: "Journal: screenshots, R multiple, rule breaks"
+    days: [Tue, Wed, Thu, Fri, Sat]
+
+# Minutes either side of a high-impact release to mark as stand-aside.
+stand_aside_minutes: 15

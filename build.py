@@ -26,6 +26,9 @@ import yaml
 
 FF_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
 YF_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=5m&range=1d"
+YF_INTRADAY = (
+    "https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=15m&range=7d"
+)
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 gold-desk/1.0"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +67,91 @@ def fetch_quote(symbol):
         print("  quote %s failed: %s" % (symbol, e), file=sys.stderr)
         return None
 
+
+def fetch_intraday(symbol):
+    """Raw 15-minute bars for the last 7 days. Returns a list of
+    (datetime_utc, high, low, close), oldest first. Empty list on any failure."""
+    try:
+        d = fetch_json(YF_INTRADAY.format(sym=urllib.parse.quote(symbol)))
+        res = d["chart"]["result"][0]
+        ts = res.get("timestamp") or []
+        q = res["indicators"]["quote"][0]
+        highs, lows, closes = q.get("high") or [], q.get("low") or [], q.get("close") or []
+        out = []
+        for i, t in enumerate(ts):
+            h = highs[i] if i < len(highs) else None
+            lo = lows[i] if i < len(lows) else None
+            c = closes[i] if i < len(closes) else None
+            if h is None or lo is None:
+                continue
+            out.append((datetime.fromtimestamp(t, ZoneInfo("UTC")), h, lo, c))
+        return out
+    except Exception as e:
+        print("  intraday %s failed: %s" % (symbol, e), file=sys.stderr)
+        return []
+
+
+def session_key(moment_local, boundary_min):
+    """Which trading day a moment belongs to, given a day that rolls at
+    boundary_min minutes past local midnight (04:00 Bangkok = the NY close)."""
+    return (moment_local - timedelta(minutes=boundary_min)).date()
+
+
+def previous_day_range(bars, tz, boundary_min, now_local):
+    """High and low of the last COMPLETED trading session before the current
+    one. Skips weekends and holidays for free — a day with no bars is simply
+    not in the bucket list."""
+    if not bars:
+        return None
+    buckets = {}
+    for t_utc, h, lo, _c in bars:
+        k = session_key(t_utc.astimezone(tz), boundary_min)
+        b = buckets.get(k)
+        if b is None:
+            buckets[k] = [h, lo]
+        else:
+            if h > b[0]:
+                b[0] = h
+            if lo < b[1]:
+                b[1] = lo
+    current = session_key(now_local, boundary_min)
+    earlier = sorted(k for k in buckets if k < current)
+    if not earlier:
+        return None
+    k = earlier[-1]
+    return {"date": k, "high": buckets[k][0], "low": buckets[k][1]}
+
+
+def range_state(last, rng, tolerance):
+    """Where the current price sits against yesterday's range.
+    Returns (code, label, detail, position_pct). Codes: above | below | inside
+    | at-high | at-low. The tolerance exists because the quote is delayed —
+    a break by less than that is not something to trust."""
+    if last is None or not rng:
+        return ("inside", "—", "", 50.0)
+    hi, lo = rng["high"], rng["low"]
+    span = max(hi - lo, 1e-9)
+    pct = max(0.0, min(100.0, (last - lo) / span * 100.0))
+    if abs(last - hi) <= tolerance:
+        return ("at-high", "at high", "within %.2f of %s" % (tolerance, fmt_num(hi)), pct)
+    if abs(last - lo) <= tolerance:
+        return ("at-low", "at low", "within %.2f of %s" % (tolerance, fmt_num(lo)), pct)
+    if last > hi:
+        return ("above", "above", "+%s over high" % fmt_num(last - hi), 100.0)
+    if last < lo:
+        return ("below", "below", "%s under low" % fmt_num(last - lo), 0.0)
+    return (
+        "inside",
+        "in range",
+        "%s to high · %s to low" % (fmt_num(hi - last), fmt_num(last - lo)),
+        pct,
+    )
+
+
+def fmt_num(v, digits=2):
+    if v is None:
+        return "—"
+    return "{:,.{d}f}".format(v, d=digits)
 
 # ----------------------------------------------------------------- calendar
 
@@ -395,17 +483,41 @@ def build(offline=None, out_path=None):
 
     # Prices — optional, delayed, and never allowed to fail the build.
     pcfg = cfg.get("prices") or {}
+    g = pcfg.get("gold") or {}
     gold = dollar = None
+    prev_range = None
+    used_symbol = None
     if pcfg.get("enabled", True):
-        g = pcfg.get("gold") or {}
-        gold = fetch_quote(g.get("symbol", "XAUUSD=X"))
-        if gold is None and g.get("fallback"):
-            gold = fetch_quote(g["fallback"])
+        for sym in [g.get("symbol", "XAUUSD=X"), g.get("fallback")]:
+            if not sym:
+                continue
+            gold = fetch_quote(sym)
+            if gold is not None:
+                used_symbol = sym
+                break
+        if used_symbol:
+            bh, bm = [int(x) for x in str(g.get("day_boundary", "04:00")).split(":")]
+            prev_range = previous_day_range(
+                fetch_intraday(used_symbol), tz, bh * 60 + bm, now_local
+            )
         d = pcfg.get("dollar") or {}
         dollar = fetch_quote(d.get("symbol", "DX-Y.NYB"))
 
     gv, gs, gc = fmt_price(gold)
     dv, ds, dc = fmt_price(dollar)
+
+    state, state_label, state_detail, state_pct = range_state(
+        gold[0] if gold else None, prev_range, float(g.get("edge_tolerance", 2.0))
+    )
+    if prev_range:
+        range_line = "H %s · L %s" % (fmt_num(prev_range["high"]), fmt_num(prev_range["low"]))
+        range_day = prev_range["date"].strftime("%a %-d %b")
+    else:
+        range_line = "previous range unavailable"
+        range_day = ""
+    print("  prev session %s  H %s  L %s  -> %s" % (range_day or "?",
+          fmt_num(prev_range["high"]) if prev_range else "-",
+          fmt_num(prev_range["low"]) if prev_range else "-", state))
 
     next_high = next(
         (e for e in today if e["impact"] == "High" and e["epoch"] >= now_local.timestamp()), None
@@ -427,6 +539,12 @@ def build(offline=None, out_path=None):
         "GOLD_VALUE": gv,
         "GOLD_SUB": gs,
         "GOLD_CLASS": gc,
+        "RANGE_STATE": state,
+        "RANGE_LABEL": esc(state_label),
+        "RANGE_DETAIL": esc(state_detail),
+        "RANGE_LINE": esc(range_line),
+        "RANGE_DAY": esc(range_day),
+        "RANGE_PCT": "%.1f" % state_pct,
         "DXY_LABEL": esc((pcfg.get("dollar") or {}).get("label", "DXY")),
         "DXY_VALUE": dv,
         "DXY_SUB": ds,
